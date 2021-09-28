@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "dhPtIh5REWokW2cvQu0fktSSEXKowbAax749evv96Pun7h8sv7o2tKo1/FZdHQ0Mfsg2RgBTND9IxmUlD1eevA==",
+  "success": true,
+  "projectFilePath": "/home/dima/Project/PhotoProg/blurphoto/blurphoto/blurphoto.csproj",
+  "expectedPackageFiles": [
+    "/home/dima/.nuget/packages/microsoft.netcore.platforms/5.0.0/microsoft.netcore.platforms.5.0.0.nupkg.sha512",
+    "/home/dima/.nuget/packages/microsoft.win32.systemevents/5.0.0/microsoft.win32.systemevents.5.0.0.nupkg.sha512",
+    "/home/dima/.nuget/packages/system.drawing.common/5.0.0/system.drawing.common.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
