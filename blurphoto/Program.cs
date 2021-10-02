@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -39,14 +40,15 @@ namespace blurphoto
             int endX = 0;
             
             Bitmap newImage = new Bitmap(image.Width, image.Height);
-            
-             var sw = Stopwatch.StartNew();
-            
+            Dictionary<string, int>[] endpointsFlows = new Dictionary<string, int>[flows];
+            Thread[] threads = new Thread[flows];
+            var sw = Stopwatch.StartNew();
+             
             // cycle passing on all original image
 
             for (int i = 0; i < flows; i++)
             {
-                startX += endX;
+                startX = endX;
                 if (endX + 2 * stepX > image.Width)
                 {
                     endX = image.Width;
@@ -55,14 +57,23 @@ namespace blurphoto
                 {
                     endX += stepX;
                 }
-                BlurFilter filter = new BlurFilter(image, startX, endX, r, k, coef,ref newImage);
-                Thread filterThread = new Thread(filter.CalculateBlur);
-                filterThread.Name = $"Thread #{i+1}";
-                filterThread.Start();
+
+                endpointsFlows[i] = new Dictionary<string, int> {{"startX", startX}, {"endX", endX}, {"Index", i}};
             }
-            
+
+            foreach (var item in endpointsFlows)
+            {
+                BlurFilter filter = new BlurFilter(image, item["startX"], item["endX"], r, k, coef,ref newImage);
+                threads[item["Index"]] = new Thread(filter.CalculateBlur) {Name = $"Thread {item["Index"]}"};
+                threads[item["Index"]].Start();
+            }
+
+            foreach (var item in threads)
+            {
+                item.Join();
+            }
             sw.Stop();
-            Console.WriteLine("Complete! Time: " + sw.Elapsed.TotalMinutes);
+            Console.WriteLine("Complete! Time: " + sw.Elapsed.TotalSeconds);
             Console.Write("Enter name for new image and it format: ");
             string newImageName = Console.ReadLine();
             // saving for save new and old image
