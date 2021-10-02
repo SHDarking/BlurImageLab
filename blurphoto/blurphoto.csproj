@@ -5,8 +5,16 @@
         <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <OutputPath />
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Resources\OutputData" />
+    </ItemGroup>
+    
 </Project>

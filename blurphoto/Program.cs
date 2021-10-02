@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Diagnostics;
 using System.Threading;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace blurphoto
 {
@@ -11,26 +14,79 @@ namespace blurphoto
     {
         static void Main(string[] args)
         {
+            // getting path to resources directory
+            string path = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
+            
             // getting image from file system for using filter
-            Bitmap image = new Bitmap(Image.FromFile("/home/dima/Project/PhotoProg/blurphoto/blurphoto/test.jpg"));
+            Console.Write("Enter name of original image file with format: ");
+            string imageName = Console.ReadLine();
+            Image originalImage = Image.FromFile($"{path}/Resources/InputData/{imageName}");
+            Bitmap image = new Bitmap(originalImage);
+            
             
             // getting r and k parameters for create coefficient
             Console.Write("Enter r value: ");
             int r = int.Parse(Console.ReadLine());
             Console.Write("Enter k value: ");
             int k = int.Parse(Console.ReadLine());
+            Console.Write("Enter number of flows needed: ");
+            int flows = int.Parse(Console.ReadLine());
             
             // initializing coefficient`s denominator
             int coef = (2 * r + 1) * (2 * k + 1);
+
+            int stepX = image.Width / flows;
+            int startX = 0;
+            int endX = 0;
             
+            Bitmap newImage = new Bitmap(image.Width, image.Height);
+            Dictionary<string, int>[] endpointsFlows = new Dictionary<string, int>[flows];
+            Thread[] threads = new Thread[flows];
+            var sw = Stopwatch.StartNew();
+             
+            // cycle passing on all original image
+
+            for (int i = 0; i < flows; i++)
+            {
+                startX = endX;
+                if (endX + 2 * stepX > image.Width)
+                {
+                    endX = image.Width;
+                }
+                else
+                {
+                    endX += stepX;
+                }
+
+                endpointsFlows[i] = new Dictionary<string, int> {{"startX", startX}, {"endX", endX}, {"Index", i}};
+            }
+
+            foreach (var item in endpointsFlows)
+            {
+                BlurFilter filter = new BlurFilter(image, item["startX"], item["endX"], r, k, coef,ref newImage);
+                threads[item["Index"]] = new Thread(filter.CalculateBlur) {Name = $"Thread {item["Index"]}"};
+                threads[item["Index"]].Start();
+            }
+
+            foreach (var item in threads)
+            {
+                item.Join();
+            }
+            sw.Stop();
+            Console.WriteLine("Complete! Time: " + sw.Elapsed.TotalSeconds);
+            Console.Write("Enter name for new image and it format: ");
+            string newImageName = Console.ReadLine();
+            // saving for save new and old image
+            newImage.Save($"{path}/Resources/OutputData/{newImageName}",originalImage.RawFormat);
+        }
+    
+        /*public Task CalculateBlur(Bitmap image, int startX, int endX, int r, int k,int coef,ref Bitmap newImage)
+        {
             // initializing average RGB values for pixel(0,0)
             double avgR = 0;
             double avgG = 0;
             double avgB = 0;
-
-            Bitmap newImage = new Bitmap(image.Width, image.Height);
-            var sw = Stopwatch.StartNew();
-            // cycle passing on all original image
+            
             for (int y = 0; y < image.Height; y++)
             {
                 for (int x = 0; x < image.Width; x++)
@@ -68,19 +124,8 @@ namespace blurphoto
                     avgG = 0;
                     avgB = 0;
                 }
-                Console.WriteLine(sw.Elapsed.TotalMinutes);
             }
-            sw.Stop();
-            Console.WriteLine("Complete! Time: " + sw.Elapsed.TotalMinutes);
-            
-            // saving for save new and old image
-            newImage.Save("/home/dima/Project/PhotoProg/blurphoto/blurphoto/blur-test.jpg",ImageFormat.Jpeg);
-
-        }
-
-        public void CalculateBlur(Bitmap image, int startX, int endX, ref Bitmap newImage)
-        {
-            
-        }
+            return Task.CompletedTask;
+        }*/
     }
 }
