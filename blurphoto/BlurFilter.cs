@@ -7,14 +7,15 @@ namespace blurphoto
     public class BlurFilter
     {
         private readonly Bitmap image;
-        private readonly int startX;
-        private readonly int endX;
+        public readonly int startX;
+        public readonly int endX;
         private readonly int r;
         private readonly int k;
         private readonly int coef;
-        private Bitmap newImage;
+        public byte[] rgbValue;
 
-        public BlurFilter(Bitmap image, int startX, int endX, int r, int k, int coef, ref Bitmap newImage)
+
+        public BlurFilter(Bitmap image, int startX, int endX, int r, int k, int coef)
         {
             this.image = image;
             this.startX = startX;
@@ -22,11 +23,11 @@ namespace blurphoto
             this.r = r;
             this.k = k;
             this.coef = coef;
-            this.newImage = newImage;
         }
         
-        public void CalculateBlur()
+        public BlurFilter CalculateBlur(int scanWidth, byte[] rgbValues, int stepX)
         {
+            Console.WriteLine($"Flow with start and end: {startX} - {endX}");
             // initializing average RGB values for pixel(0,0)
             double avgR = 0;
             double avgG = 0;
@@ -58,20 +59,28 @@ namespace blurphoto
                             // compute new color for pixel(x,y)
                             var pixel = image.GetPixel(x + n, y + m);
                             avgR += (double) pixel.R / coef;
-                            avgG += (double) pixel.G / coef;
+                            avgG += (double)pixel.G / coef;
                             avgB += (double) pixel.B / coef;
 
                         }
                     }
                     // create new pixel in new image file
-                    newImage.SetPixel(x,y,Color.FromArgb((int)avgR,(int)avgG,(int)avgB));
+                    int bitsOfPixel = scanWidth / image.Width;
+                    int startBitX = bitsOfPixel * (x - startX + stepX * y);
+                    rgbValues[startBitX] =(byte) avgB;
+                    rgbValues[startBitX + 1] =(byte) avgG;
+                    rgbValues[startBitX + 2] =(byte) avgR;
+                    rgbValues[startBitX + 3] = 255;
+
                     avgR = 0;
                     avgG = 0;
                     avgB = 0;
                 }
             }
 
-            Console.WriteLine(Thread.CurrentThread.Name + " complete!");
+            rgbValue = rgbValues;
+            Console.WriteLine("complete!");
+            return this;
         }
     }
 }
